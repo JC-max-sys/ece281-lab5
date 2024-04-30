@@ -1,6 +1,6 @@
 --+----------------------------------------------------------------------------
 --|
---| NAMING CONVENSIONS :
+--| NAMING CONVENSIONS : made by Jack Culp and Jamar Price
 --|
 --|    xb_<port name>           = off-chip bidirectional port ( _pads file )
 --|    xi_<port name>           = off-chip input port         ( _pads file )
