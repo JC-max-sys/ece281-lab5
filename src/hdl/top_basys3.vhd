@@ -33,6 +33,22 @@ architecture top_basys3_arch of top_basys3 is
   
 	-- declare components and signals
 
+    -- Signals --
+    signal w_clk : std_logic; -- the clock signal for the mux to select a digit from the calculations
+    signal w_cycle : std_logic_vector (3 downto 0); -- the dataline for the current state, connects to output debugging leds
+    signal w_reg_A : std_logic_vector (3 downto 0); -- the dataline for the first register
+    signal w_reg_B : std_logic_vector (3 downto 0); -- the dataline for the second register
+    signal w_flags : std_logic_vector (3 downto 0); -- the dataline for the output leds for the flags from the math
+    signal w_result : std_logic_vector (3 downto 0); -- the dataline from the ALU to the mux
+    signal w_mux_to_alu : std_logic_vector (3 downto 0); -- the dataline from the mux to the binary to decimal converter box
+    signal w_tdm_to_7seg : std_logic_vector (3 downto 0); -- the dataline from the TDM to the Seven Segment Decoder
+    signal w_sel : std_logic_vector (3 downto 0); -- the data line from the TDM which selects the anode to be on for the final output on the seven segmetn display
+    -- input signals --
+    signal w_sw_7_0_in : std_logic_vector ( 7 downto 0); -- the dataline from the switches 7:0 for the inputs
+    signal w_sw_2_0_in : std_logic_vector ( 3 downto 0); -- the dataline from the op code selecting switches to the alu
+    signal w_btnU_in : std_logic ; -- the reset button line
+    signal w_btnC_in : std_logic ; -- the advance button line
+     
   
 begin
 	-- PORT MAPS ----------------------------------------
@@ -40,6 +56,7 @@ begin
 	
 	
 	-- CONCURRENT STATEMENTS ----------------------------
+
 	
 	
 	
