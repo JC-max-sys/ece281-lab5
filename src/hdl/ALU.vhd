@@ -51,18 +51,52 @@ architecture behavioral of ALU is
 	-- declare components and signals
 	
 	-- component 4 bit mux
+	component mux_4_to_1 is
+	    Port ( i_sel : in STD_LOGIC_VECTOR (1 downto 0);
+              i_data_in_a : in STD_LOGIC_VECTOR (7 downto 0);
+              i_data_in_b : in STD_LOGIC_VECTOR (7 downto 0);
+              i_data_in_c : in STD_LOGIC_VECTOR (7 downto 0);
+              i_data_in_d : in STD_LOGIC_VECTOR (7 downto 0);
+              o_data_out : out STD_LOGIC_VECTOR (7 downto 0)
+              );
+	end component mux_4_to_1;
+	   
 	
 	-- component 3 bit opcode with shift selector
+	component three_bit_shift_selector is
+	 Port ( i_opcode : in STD_LOGIC_VECTOR (2 downto 0);
+              o_shift : out STD_LOGIC;
+              o_select : out STD_LOGIC_VECTOR (1 downto 0));
+    end component three_bit_shift_selector;
 	
 	-- and
 	
 	-- or
 	
 	-- right/left shifter
+	component right_left_shifter
+	Port ( i_A : in STD_LOGIC_VECTOR (7 downto 0);
+               i_B : in STD_LOGIC_VECTOR (7 downto 0);
+               i_R_L : in STD_LOGIC;
+               o_result : out STD_LOGIC_VECTOR (7 downto 0));
+	end component right_left_shifter;
 	
 	-- adder/subtractor
-	
+	component adder_subtractor is 
+	 Port ( i_A : in STD_LOGIC_VECTOR (7 downto 0);
+              i_B : in STD_LOGIC_VECTOR (7 downto 0);
+              i_add_sub : in STD_LOGIC;
+              o_result : out STD_LOGIC_VECTOR (7 downto 0);
+              o_overflow : out STD_LOGIC;
+              o_carry : out STD_LOGIC );
+    end component adder_subtractor;
+    
 	-- flag 2 led converter
+	component flag_to_led_converter is
+	   Port ( i_overflow : in STD_LOGIC;
+               i_carry : in STD_LOGIC;
+               o_led : out STD_LOGIC_VECTOR (2 downto 0));
+	end component flag_to_led_converter;
 	
 	-- Signals
 	signal w_A : std_logic_vector (7 downto 0); -- input wire for a
@@ -73,7 +107,8 @@ architecture behavioral of ALU is
 	signal w_result_shifter : std_logic_vector(7 downto 0); -- result of shift calculation
 	signal w_result_add_subtract : std_logic_vector(7 downto 0); -- result of add or subract calculation
 	signal w_shift : std_logic; -- boolean value for shift of left right or add subtract
-	signal w_opcode_select : std_logic_vector(1 downto 0); -- opcode that selects desired calculation
+	signal w_opcode_in : std_logic_vector(2 downto 0); -- opcode that selects desired calculation
+	signal w_opcode_selector_to_mux : std_logic_vector(1 downto 0);
 	signal w_overflow : std_logic; -- boolean value for overflow
 	signal w_carry : std_logic; -- boolean value for carry
 	signal w_flag_to_led : std_logic_vector(2 downto 0); -- led output code for flags
@@ -83,7 +118,56 @@ architecture behavioral of ALU is
   
 begin
 	-- PORT MAPS ----------------------------------------
-
+    w_A <= i_A;
+    w_B <= i_B;
+    o_result <= w_result_final;
+    w_opcode_in <= i_opcode;
+    o_led <= w_flag_to_led;
+    
+    w_result_and <= (w_A and w_B);
+    w_result_or <= (w_A or w_B);
+    
+    three_bit_shift_selector_inst : three_bit_shift_selector
+        port map(
+            i_opcode => w_opcode_in,
+            o_select => w_opcode_selector_to_mux,
+            o_shift => w_shift
+        );
+    
+    adder_subtractor_inst :adder_subtractor
+        port map(
+            i_A => w_A,
+            i_B => w_B,
+            i_add_sub => w_shift,
+            o_result => w_result_add_subtract,
+            o_carry => w_carry,
+            o_overflow => w_overflow
+        );
+        
+     right_left_shifter_inst : right_left_shifter
+        port map(
+            i_A => w_A,
+            i_B => w_B,
+            i_r_l => w_shift,
+            o_result => w_result_shifter
+        );
+        
+     flag_to_led_converter_inst : flag_to_led_converter
+        port map (
+            i_overflow => w_overflow,
+            i_carry => w_carry,
+            o_led => w_flag_to_led
+        );
+	
+	 mux_4_to_1_inst : mux_4_to_1
+	   port map (
+	       i_data_in_a => w_result_add_subtract,
+	       i_data_in_b => w_result_shifter,
+	       i_data_in_c => w_result_and,
+	       i_data_in_d => w_result_or, 
+	       i_sel => w_opcode_selector_to_mux,
+	       o_data_out => w_result_final
+	   );
 	
 	
 	-- CONCURRENT STATEMENTS ----------------------------
