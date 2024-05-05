@@ -31,13 +31,12 @@ entity top_basys3 is
         clk : in std_logic;
         btnU : in std_logic;
         btnC : in std_logic;
-        sw3 : in std_logic_vector(3 downto 0);
-        sw7 : in std_logic_vector(7 downto 0);
-        led_cycle : out std_logic_vector(3 downto 0);
-        seg : out std_logic_vector(7 downto 0);
-        an : out std_logic_vector(3 downto 0);
-        led_flags : out std_logic_vector(15 downto 13)
-        
+--        sw3 : in std_logic_vector(2 downto 0);
+        sw : in std_logic_vector(7 downto 0);
+        led : out std_logic_vector(15 downto 0);
+        seg : out std_logic_vector(6 downto 0);
+        an : out std_logic_vector(3 downto 0)
+       
         
         -- outputs
 
@@ -54,7 +53,7 @@ architecture top_basys3_arch of top_basys3 is
 	signal w_btnC_in : std_logic; -- wire for the advance command, connects to FSM
 	signal w_sw_2_0_in : std_logic_vector(2 downto 0); -- wire for opcode input, connects to ALU
 	signal w_sw_7_0_in : std_logic_vector(7 downto 0); -- wire for the numerical value input, connects to reg a, connects to reg b
-	signal w_cycle_out : std_logic_vector(3 downto 0); -- one hot signal for the fsm state, selects which number is displayed in the mux, and outputs to leds for debugging, connects to both registers and decides which one receives an input in a current state within the FSM
+	signal w_cycle_out : std_logic_vector(1 downto 0); -- one hot signal for the fsm state, selects which number is displayed in the mux, and outputs to leds for debugging, connects to both registers and decides which one receives an input in a current state within the FSM
 	signal w_A_out : std_logic_vector(7 downto 0); -- signal from the register A, connects to AUL
 	signal w_B_out : std_logic_vector(7 downto 0); -- signal from the register B, connects to ALU
 	signal w_ALU_out : std_logic_vector(7 downto 0); -- result of the alu
@@ -68,6 +67,8 @@ architecture top_basys3_arch of top_basys3 is
 	signal w_clk_out : std_logic ; -- signal for the clock that cycles the TDM faster than the eye can see, connects to the TDM4
 	signal w_annode_out : std_logic_vector(7 downto 0); -- signal for the output of the annodes
 	signal w_cathode_out : std_logic_vector(3 downto 0); -- signal for to select which 7 seg is on
+	signal sw3 : std_logic_vector(2 downto 0);
+	signal sw7 : std_logic_vector(7 downto 0);
 	 
 -- connection of all the wires to the outside world occure here
 
@@ -82,7 +83,7 @@ architecture top_basys3_arch of top_basys3 is
 	--component Register A
 	component reg is 
 	   Port ( val_in : in STD_LOGIC_VECTOR (7 downto 0);
-               cycle_in : in STD_LOGIC_VECTOR (3 downto 0);
+               cycle_in : in STD_LOGIC_VECTOR (1 downto 0);
                val_out : out STD_LOGIC_VECTOR (7 downto 0)
       );
       end component reg;
@@ -91,7 +92,7 @@ architecture top_basys3_arch of top_basys3 is
 	--component Register B
 	  component reg1 is 
            Port ( val_in : in STD_LOGIC_VECTOR (7 downto 0);
-                   cycle_in : in STD_LOGIC_VECTOR (3 downto 0);
+                   cycle_in : in STD_LOGIC_VECTOR (1 downto 0);
                    val_out : out STD_LOGIC_VECTOR (7 downto 0)
           );
           end component reg1;
@@ -134,14 +135,15 @@ architecture top_basys3_arch of top_basys3 is
 	
 	--component TDM4
 	component TDM4 is 
+	 generic ( constant k_WIDTH : natural  := 4); -- bits in input and output
 	 Port ( i_clk		: in  STD_LOGIC;
-              i_reset        : in  STD_LOGIC; -- asynchronous
-              i_D3         : in  STD_LOGIC_VECTOR (7  downto 0);
-              i_D2         : in  STD_LOGIC_VECTOR (7 downto 0);
-              i_D1         : in  STD_LOGIC_VECTOR (7 downto 0);
-              i_D0         : in  STD_LOGIC_VECTOR (7 downto 0);
-              o_data        : out STD_LOGIC_VECTOR (7downto 0);
-              o_sel        : out STD_LOGIC_VECTOR (3 downto 0)    -- selected data line (one-cold)
+                i_reset        : in  STD_LOGIC; -- asynchronous
+                i_D3         : in  STD_LOGIC_VECTOR (k_WIDTH - 1 downto 0);
+                i_D2         : in  STD_LOGIC_VECTOR (k_WIDTH - 1 downto 0);
+                i_D1         : in  STD_LOGIC_VECTOR (k_WIDTH - 1 downto 0);
+                i_D0         : in  STD_LOGIC_VECTOR (k_WIDTH - 1 downto 0);
+                o_data        : out STD_LOGIC_VECTOR (k_WIDTH - 1 downto 0);
+                o_sel        : out STD_LOGIC_VECTOR (3 downto 0)    -- selected data line (one-cold)
        );
       end component TDM4;
 	
@@ -149,7 +151,7 @@ architecture top_basys3_arch of top_basys3 is
 	--component Seven Segment Decoder
     component positive_negative_7_segment_display is
         Port ( i_D : in STD_LOGIC_VECTOR (3 downto 0);
-              o_s : out STD_LOGIC_VECTOR (7 downto 0)
+              o_s : out STD_LOGIC_VECTOR (6 downto 0)
         );
     end component positive_negative_7_segment_display;	
 	
@@ -161,6 +163,7 @@ architecture top_basys3_arch of top_basys3 is
                    i_reset  : in std_logic;  
                    o_clk : out STD_LOGIC
                    
+                   
                );
                end component clock_divider;
 	
@@ -168,7 +171,8 @@ architecture top_basys3_arch of top_basys3 is
 	component controller_FSM is
 	    Port ( i_reset : in STD_LOGIC;
               i_advance : in STD_LOGIC;
-              o_cycle : out STD_LOGIC_VECTOR (3 downto 0)
+              o_cycle : out STD_LOGIC_VECTOR (1 downto 0);
+              i_clk : in STD_LOGIC
         );
         end component controller_FSM;
         
@@ -197,6 +201,12 @@ architecture top_basys3_arch of top_basys3 is
      
   
 begin
+    sw3 <= sw(2 downto 0);
+    sw7 <= sw(7 downto 0);
+    led(12 downto 4) <= x"00"&'0';
+    w_btnU_in <= btnU;
+    w_btnC_in <= btnC;
+    
 	-- PORT MAPS ----------------------------------------
         -- Register A 
             -- inputs
@@ -241,7 +251,7 @@ begin
                 i_B => w_B_out, -- connection of b register to alu
                 i_opcode => sw3,-- connection of opcode input to alu
                 o_result => w_ALU_out,  -- output of the desired calculation based on the opcode
-                o_flags => led_flags -- output of the flags
+                o_flags => led(15 downto 13) -- output of the flags
             );
               
              
@@ -256,7 +266,7 @@ begin
               -- w_mux_to_converter   
             mux_4_to_1_inst : mux_4_to_1
                  Port map (
-                      i_sel => w_cycle_out,
+                      i_sel => w_cycle_out(1 downto 0),
                       i_data_in_a => w_A_out,
                       i_data_in_b => w_B_out,
                       i_data_in_c => w_ALU_out,
@@ -294,13 +304,14 @@ begin
                 -- w_sel
                 -- w_tdm_to_7seg
          TDM4_inst : TDM4
+            generic map ( k_WIDTH => 4)
             Port map (
                     i_clk => w_clk_out,
                     i_reset => w_btnU_in,
-                    i_D3 => w_ones,
-                    i_D2 => w_tens,
-                    i_D1 => w_hund,
-                    i_D0 => w_sign,
+                    i_D0 => w_ones,
+                    i_D1 => w_tens,
+                    i_D2 => w_hund,
+                    i_D3 => w_sign,
                     o_data => w_seven_seg_val,
                     o_sel => an
              );
@@ -328,6 +339,7 @@ begin
             -- outputs
                 -- w_clk
         clock_divider_inst : clock_divider
+        generic map (k_div => 250000)
            port map (
             	i_clk   => clk,
                 i_reset   => w_btnU_in,          -- unnessecary but there
@@ -345,7 +357,8 @@ begin
             Port map (
                      i_reset =>btnU,
                      i_advance  => btnC,
-                     o_cycle => w_cycle_out
+                     o_cycle => w_cycle_out,
+                     i_clk => clk
                 );
             
 
