@@ -42,7 +42,7 @@ entity ALU is
         i_B : in std_logic_vector(7 downto 0); -- connection of b register to alu
         i_opcode : in std_logic_vector(2 downto 0); -- connection of opcode input to alu
         o_result : out std_logic_vector(7 downto 0); -- output of the desired calculation based on the opcode
-        o_led : out std_logic_vector(2 downto 0) -- output of the flags
+        o_flags : out std_logic_vector(2 downto 0) -- output of the flags
     );
 end ALU;
 
@@ -122,7 +122,7 @@ begin
     w_B <= i_B;
     o_result <= w_result_final;
     w_opcode_in <= i_opcode;
-    o_led <= w_flag_to_led;
+    o_flags <= w_flag_to_led;
     
     w_result_and <= (w_A and w_B);
     w_result_or <= (w_A or w_B);

@@ -56,7 +56,8 @@ architecture top_basys3_arch of top_basys3 is
 	signal w_sw_7_0_in : std_logic_vector(7 downto 0); -- wire for the numerical value input, connects to reg a, connects to reg b
 	signal w_cycle_out : std_logic_vector(3 downto 0); -- one hot signal for the fsm state, selects which number is displayed in the mux, and outputs to leds for debugging, connects to both registers and decides which one receives an input in a current state within the FSM
 	signal w_A_out : std_logic_vector(7 downto 0); -- signal from the register A, connects to AUL
-	signal w_b_out : std_logic_vector(7 downto 0); -- signal from the register B, connects to ALU
+	signal w_B_out : std_logic_vector(7 downto 0); -- signal from the register B, connects to ALU
+	signal w_ALU_out : std_logic_vector(7 downto 0); -- result of the alu
 	signal w_flags_out : std_logic_vector(2 downto 0); -- signal for the output flags, make sure to connect it to led 15-13
 	signal w_mux_out : std_logic_vector(7 downto 0); -- signal for the selected item to be displayed from the mux, goes to 2s compt converter
 	signal w_sign : std_logic_vector(3 downto 0); -- signal for the sign of the value, connects to TDM4
@@ -66,6 +67,7 @@ architecture top_basys3_arch of top_basys3 is
 	signal w_seven_seg_val : std_logic_vector(3 downto 0); -- signal for the current number to be displayed to the 7seg decoder, connects to 7seg
 	signal w_clk_out : std_logic ; -- signal for the clock that cycles the TDM faster than the eye can see, connects to the TDM4
 	signal w_annode_out : std_logic_vector(7 downto 0); -- signal for the output of the annodes
+	signal w_cathode_out : std_logic_vector(3 downto 0); -- signal for to select which 7 seg is on
 	 
 	
 	--component Register A
@@ -92,7 +94,7 @@ architecture top_basys3_arch of top_basys3 is
            i_B : in std_logic_vector(7 downto 0); -- connection of b register to alu
            i_opcode : in std_logic_vector(2 downto 0); -- connection of opcode input to alu
            o_result : out std_logic_vector(7 downto 0); -- output of the desired calculation based on the opcode
-           o_led : out std_logic_vector(2 downto 0) -- output of the flags
+           o_flags : out std_logic_vector(2 downto 0) -- output of the flags
        );
        end component ALU;
 	
@@ -112,11 +114,11 @@ architecture top_basys3_arch of top_basys3 is
 	--component Twos Complement to decimal converter
 	component twoscomp_decimal is
 	 port (
-           i_binary: in std_logic_vector(7 downto 0);
-           o_negative: out std_logic;
-           o_hundreds: out std_logic_vector(3 downto 0);
-           o_tens: out std_logic_vector(3 downto 0);
-           o_ones: out std_logic_vector(3 downto 0)
+             i_binary: in std_logic_vector(7 downto 0);
+             o_negative: out std_logic_vector(3 downto 0);
+             o_hundreds: out std_logic_vector(3 downto 0);
+             o_tens: out std_logic_vector(3 downto 0);
+             o_ones: out std_logic_vector(3 downto 0)
        );
     end component twoscomp_decimal;
 	
@@ -212,6 +214,15 @@ begin
             -- outputs
                 -- w_result -- result from alu
                 -- w_flags_out 
+         ALU_inst : ALU
+             Port map(
+                i_A => w_A_out, -- connection of A register to alu
+                i_B => w_B_out, -- connection of b register to alu
+                i_opcode => w_sw_2_0_in, -- connection of opcode input to alu
+                o_result => w_ALU_out,  -- output of the desired calculation based on the opcode
+                o_flags => w_flags_out -- output of the flags
+            );
+              
              
         
         -- MUX
@@ -222,6 +233,15 @@ begin
                -- w_cycle_out
            -- outputs 
               -- w_mux_to_converter   
+            mux_4_to_1_inst : mux_4_to_1
+                 Port map (
+                      i_sel => w_cycle_out,
+                      i_data_in_a => w_A_out,
+                      i_data_in_b => w_B_out,
+                      i_data_in_c => w_ALU_out,
+                      i_data_in_d => "00000000",
+                      o_data_out => w_mux_out
+                      );
            
                    
         -- Twos Complement to decimal converter
@@ -232,6 +252,14 @@ begin
                 -- w_hund
                 -- w_tens
                 -- w_ones
+         twoscomp_decimal_inst : twoscomp_decimal
+             port map (
+                i_binary => w_mux_out,
+                o_negative => w_sign,
+                o_hundreds => w_hund,
+                o_tens => w_tens,
+                o_ones => w_ones
+            );
                 
         
         -- TDM4
@@ -244,13 +272,28 @@ begin
            -- outputs
                 -- w_sel
                 -- w_tdm_to_7seg
-             
+         TDM4_inst : TDM4
+            Port map (
+                    i_clk => w_clk_out,
+                    i_reset => w_btnU_in,
+                    i_D3 => w_ones,
+                    i_D2 => w_tens,
+                    i_D1 => w_hund,
+                    i_D0 => w_sign,
+                    o_data => w_seven_seg_val,
+                    o_sel => w_cathode_out
+             );
+                    
+                    
+                    
+               
         
         -- Seven Segment Decoder
             -- inputs
                 -- w_tdm_to_7seg
             -- outputs
                 -- w_7seg_out
+          
         
         
         -- Clock Divider
@@ -258,6 +301,12 @@ begin
                 -- w_clk_in
             -- outputs
                 -- w_clk
+        clock_divider_inst : clock_divider
+           port map (
+            	i_clk   => w_clk_in,
+                i_reset   => w_btnU_in,          -- unnessecary but there
+                o_clk   => w_clk_out         -- divided (slow) clock
+            );
         
         
         -- Controller FSM
