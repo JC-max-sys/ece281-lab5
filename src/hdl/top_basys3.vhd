@@ -69,7 +69,16 @@ architecture top_basys3_arch of top_basys3 is
 	signal w_annode_out : std_logic_vector(7 downto 0); -- signal for the output of the annodes
 	signal w_cathode_out : std_logic_vector(3 downto 0); -- signal for to select which 7 seg is on
 	 
-	
+-- connection of all the wires to the outside world occure here
+
+    
+    
+
+
+
+
+
+
 	--component Register A
 	component reg is 
 	   Port ( val_in : in STD_LOGIC_VECTOR (7 downto 0);
@@ -195,7 +204,13 @@ begin
                 -- w_cycle_out
             -- outputs
                 -- w_A_out
-           
+        Reg_inst : reg
+           Port map(
+                   val_in =>  sw7, 
+                   cycle_in => w_cycle_out,
+                   val_out => w_A_out
+            );
+         
         
         
     
@@ -205,6 +220,12 @@ begin
                  -- w_cycle_out
             -- outputs
                  -- w_B_out
+          Reg1_inst : reg1
+                   Port map(
+                           val_in => sw7(7 downto 0),
+                           cycle_in => w_cycle_out,
+                           val_out => w_B_out
+                    );
         
         -- ALU
             -- inputs
@@ -218,9 +239,9 @@ begin
              Port map(
                 i_A => w_A_out, -- connection of A register to alu
                 i_B => w_B_out, -- connection of b register to alu
-                i_opcode => w_sw_2_0_in, -- connection of opcode input to alu
+                i_opcode => sw3,-- connection of opcode input to alu
                 o_result => w_ALU_out,  -- output of the desired calculation based on the opcode
-                o_flags => w_flags_out -- output of the flags
+                o_flags => led_flags -- output of the flags
             );
               
              
@@ -281,7 +302,7 @@ begin
                     i_D1 => w_hund,
                     i_D0 => w_sign,
                     o_data => w_seven_seg_val,
-                    o_sel => w_cathode_out
+                    o_sel => an
              );
                     
                     
@@ -293,6 +314,11 @@ begin
                 -- w_tdm_to_7seg
             -- outputs
                 -- w_7seg_out
+         positive_negative_7_segment_display_inst : positive_negative_7_segment_display
+          Port map (
+             i_D =>  w_seven_seg_val,
+             o_s => seg(6 downto 0)
+           );
           
         
         
@@ -303,7 +329,7 @@ begin
                 -- w_clk
         clock_divider_inst : clock_divider
            port map (
-            	i_clk   => w_clk_in,
+            	i_clk   => clk,
                 i_reset   => w_btnU_in,          -- unnessecary but there
                 o_clk   => w_clk_out         -- divided (slow) clock
             );
@@ -317,13 +343,12 @@ begin
                 -- w_cycle_out
         controller_FSM_inst : controller_FSM
             Port map (
-                     i_reset =>w_btnU_in,
-                     i_advance  => w_btnC_in,
+                     i_reset =>btnU,
+                     i_advance  => btnC,
                      o_cycle => w_cycle_out
                 );
             
-	
-	
+
 	-- CONCURRENT STATEMENTS ----------------------------
 
 	
