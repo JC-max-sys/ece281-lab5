@@ -51,7 +51,24 @@ architecture top_basys3_arch of top_basys3 is
 	-- declare components and signals
 	  
 	
-	
+	signal w_clk_in : std_logic; -- wire for the tdm clock to have multiple 7seg displays cycled through, connects to the clk divider
+	signal w_btnU_in : std_logic; -- wire for the reset, connects to FSM
+	signal w_btnC_in : std_logic; -- wire for the advance command, connects to FSM
+	signal w_sw_2_0_in : std_logic_vector(2 downto 0); -- wire for opcode input, connects to ALU
+	signal w_sw_7_0_in : std_logic_vector(7 downto 0); -- wire for the numerical value input, connects to reg a, connects to reg b
+	signal w_cycle_out : std_logic_vector(3 downto 0); -- one hot signal for the fsm state, selects which number is displayed in the mux, and outputs to leds for debugging, connects to both registers and decides which one receives an input in a current state within the FSM
+	signal w_A_out : std_logic_vector(7 downto 0); -- signal from the register A, connects to AUL
+	signal w_b_out : std_logic_vector(7 downto 0); -- signal from the register B, connects to ALU
+	signal w_flags_out : std_logic_vector(2 downto 0); -- signal for the output flags, make sure to connect it to led 15-13
+	signal w_mux_out : std_logic_vector(7 downto 0); -- signal for the selected item to be displayed from the mux, goes to 2s compt converter
+	signal w_sign : std_logic_vector(3 downto 0); -- signal for the sign of the value, connects to TDM4
+	signal w_hund : std_logic_vector(3 downto 0); -- signal for the hundreds place, connects to TDM4
+	signal w_tens : std_logic_vector(3 downto 0); -- signal for the tens place, connects to TDM4
+	signal w_ones : std_logic_vector(3 downto 0); -- signal for the ones place, connects to TDM4
+	signal w_seven_seg_val : std_logic_vector(3 downto 0); -- signal for the current number to be displayed to the 7seg decoder, connects to 7seg
+	signal w_clk_out : std_logic ; -- signal for the clock that cycles the TDM faster than the eye can see, connects to the TDM4
+	signal w_annode_out : std_logic_vector(7 downto 0); -- signal for the output of the annodes
+	 
 	
 	--component Register A
 	
