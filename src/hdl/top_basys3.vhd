@@ -48,9 +48,7 @@ end top_basys3;
 
 architecture top_basys3_arch of top_basys3 is 
   
-	-- declare components and signals
-	  
-	
+	-- declare components and signals	
 	signal w_clk_in : std_logic; -- wire for the tdm clock to have multiple 7seg displays cycled through, connects to the clk divider
 	signal w_btnU_in : std_logic; -- wire for the reset, connects to FSM
 	signal w_btnC_in : std_logic; -- wire for the advance command, connects to FSM
@@ -71,59 +69,120 @@ architecture top_basys3_arch of top_basys3 is
 	 
 	
 	--component Register A
-	
+	component reg is 
+	   Port ( val_in : in STD_LOGIC_VECTOR (7 downto 0);
+               cycle_in : in STD_LOGIC_VECTOR (3 downto 0);
+               val_out : out STD_LOGIC_VECTOR (7 downto 0)
+      );
+      end component reg;
+           
 	
 	--component Register B
-	
+	  component reg1 is 
+           Port ( val_in : in STD_LOGIC_VECTOR (7 downto 0);
+                   cycle_in : in STD_LOGIC_VECTOR (3 downto 0);
+                   val_out : out STD_LOGIC_VECTOR (7 downto 0)
+          );
+          end component reg1;
 	
 	--component ALU
+	component ALU is
+	 port(
+           i_A : in std_logic_vector(7 downto 0); -- connection of A register to alu
+           i_B : in std_logic_vector(7 downto 0); -- connection of b register to alu
+           i_opcode : in std_logic_vector(2 downto 0); -- connection of opcode input to alu
+           o_result : out std_logic_vector(7 downto 0); -- output of the desired calculation based on the opcode
+           o_led : out std_logic_vector(2 downto 0) -- output of the flags
+       );
+       end component ALU;
 	
 	
-	
-	--component MUX
+	--component 4:1 MUX
+	component mux_4_to_1 is
+        Port ( i_sel : in STD_LOGIC_VECTOR (1 downto 0);
+               i_data_in_a : in STD_LOGIC_VECTOR (7 downto 0);
+               i_data_in_b : in STD_LOGIC_VECTOR (7 downto 0);
+               i_data_in_c : in STD_LOGIC_VECTOR (7 downto 0);
+               i_data_in_d : in STD_LOGIC_VECTOR (7 downto 0);
+               o_data_out : out STD_LOGIC_VECTOR (7 downto 0)
+               );
+     end component mux_4_to_1;
 	
 	
 	--component Twos Complement to decimal converter
-	
+	component twoscomp_decimal is
+	 port (
+           i_binary: in std_logic_vector(7 downto 0);
+           o_negative: out std_logic;
+           o_hundreds: out std_logic_vector(3 downto 0);
+           o_tens: out std_logic_vector(3 downto 0);
+           o_ones: out std_logic_vector(3 downto 0)
+       );
+    end component twoscomp_decimal;
 	
 	
 	--component TDM4
+	component TDM4 is 
+	 Port ( i_clk		: in  STD_LOGIC;
+              i_reset        : in  STD_LOGIC; -- asynchronous
+              i_D3         : in  STD_LOGIC_VECTOR (7  downto 0);
+              i_D2         : in  STD_LOGIC_VECTOR (7 downto 0);
+              i_D1         : in  STD_LOGIC_VECTOR (7 downto 0);
+              i_D0         : in  STD_LOGIC_VECTOR (7 downto 0);
+              o_data        : out STD_LOGIC_VECTOR (7downto 0);
+              o_sel        : out STD_LOGIC_VECTOR (3 downto 0)    -- selected data line (one-cold)
+       );
+      end component TDM4;
 	
 	
-	--,component Seven Segment Decoder
-	
-	
+	--component Seven Segment Decoder
+    component positive_negative_7_segment_display is
+        Port ( i_D : in STD_LOGIC_VECTOR (3 downto 0);
+              o_s : out STD_LOGIC_VECTOR (7 downto 0)
+        );
+    end component positive_negative_7_segment_display;	
 	
 	--component Clock Divider
-	
+    component clock_divider is
+               generic ( constant k_DIV : natural := 2 );
+               port (
+                   i_clk : in STD_LOGIC;
+                   i_reset  : in std_logic;  
+                   o_clk : out STD_LOGIC
+                   
+               );
+               end component clock_divider;
 	
 	--component Controller FSM
+	component controller_FSM is
+	    Port ( i_reset : in STD_LOGIC;
+              i_advance : in STD_LOGIC;
+              o_cycle : out STD_LOGIC_VECTOR (3 downto 0)
+        );
+        end component controller_FSM;
+        
+              
 	
-	
-	
-	
-	
-	
-	
-	
+
 	
 
     -- Signals --
-    signal w_clk : std_logic; -- the clock signal for the mux to select a digit from the calculations
-    signal w_cycle_out : std_logic_vector (3 downto 0); -- the dataline for the current state, connects to output debugging leds
-    signal w_reg_A : std_logic_vector (3 downto 0); -- the dataline for the first register
-    signal w_reg_B : std_logic_vector (3 downto 0); -- the dataline for the second register
-    signal w_flags : std_logic_vector (3 downto 0); -- the dataline for the output leds for the flags from the math
-    signal w_result : std_logic_vector (3 downto 0); -- the dataline from the ALU to the mux
-    signal w_mux_to_converter : std_logic_vector (3 downto 0); -- the dataline from the mux to the binary to decimal converter box
-    signal w_tdm_to_7seg : std_logic_vector (3 downto 0); -- the dataline from the TDM to the Seven Segment Decoder
-    signal w_7seg_out : std_logic_vector (3 downto 0); -- dataline from seven segment decoder to the seven segment display
-    signal w_sel : std_logic_vector (3 downto 0); -- the data line from the TDM which selects the anode to be on for the final output on the seven segmetn display
-    -- input signals --
-    signal w_sw_7_0_in : std_logic_vector ( 7 downto 0); -- the dataline from the switches 7:0 for the inputs
-    signal w_sw_2_0_in : std_logic_vector ( 3 downto 0); -- the dataline from the op code selecting switches to the alu
-    signal w_btnU_in : std_logic ; -- the reset button line
-    signal w_btnC_in : std_logic ; -- the advance button line
+    -- removed for duplicitiy
+--    signal w_clk : std_logic; -- the clock signal for the mux to select a digit from the calculations
+--    signal w_cycle_out : std_logic_vector (3 downto 0); -- the dataline for the current state, connects to output debugging leds
+--    signal w_reg_A : std_logic_vector (3 downto 0); -- the dataline for the first register
+--    signal w_reg_B : std_logic_vector (3 downto 0); -- the dataline for the second register
+--    signal w_flags : std_logic_vector (3 downto 0); -- the dataline for the output leds for the flags from the math
+--    signal w_result : std_logic_vector (3 downto 0); -- the dataline from the ALU to the mux
+--    signal w_mux_to_converter : std_logic_vector (3 downto 0); -- the dataline from the mux to the binary to decimal converter box
+--    signal w_tdm_to_7seg : std_logic_vector (3 downto 0); -- the dataline from the TDM to the Seven Segment Decoder
+--    signal w_7seg_out : std_logic_vector (3 downto 0); -- dataline from seven segment decoder to the seven segment display
+--    signal w_sel : std_logic_vector (3 downto 0); -- the data line from the TDM which selects the anode to be on for the final output on the seven segmetn display
+--    -- input signals --
+--    signal w_sw_7_0_in : std_logic_vector ( 7 downto 0); -- the dataline from the switches 7:0 for the inputs
+--    signal w_sw_2_0_in : std_logic_vector ( 3 downto 0); -- the dataline from the op code selecting switches to the alu
+--    signal w_btnU_in : std_logic ; -- the reset button line
+--    signal w_btnC_in : std_logic ; -- the advance button line
      
   
 begin
@@ -207,6 +266,13 @@ begin
                 -- w_btnC_in
             -- outputs
                 -- w_cycle_out
+        controller_FSM_inst : controller_FSM
+            Port map (
+                     i_reset =>w_btnU_in,
+                     i_advance  => w_btnC_in,
+                     o_cycle => w_cycle_out
+                );
+            
 	
 	
 	-- CONCURRENT STATEMENTS ----------------------------
