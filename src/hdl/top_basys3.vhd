@@ -180,12 +180,10 @@ architecture top_basys3_arch of top_basys3 is
      
   
 begin
-    led(15 downto 12) <= w_cycle_out;
+    led(3 downto 0) <= w_cycle_out;
     sw3 <= sw(2 downto 0);
-  
     sw7 <= sw(7 downto 0);
-    
-    led(12 downto 4) <= x"00"&'0';
+    led(15 downto 4) <= "000000000000";
     w_btnU_in <= btnU;
     w_btnC_in <= btnC;
 --    w_A_out <= sw(7 downto 0);
@@ -247,11 +245,11 @@ begin
               -- w_mux_to_converter   
             mux_4_to_1_inst : mux_4_to_1
                  Port map (
-                      i_sel => w_cycle_out(2 downto 1), -- current working directory
-                      i_data_in_a => w_A_out,
-                      i_data_in_b => w_B_out,
-                      i_data_in_c => w_ALU_out,
-                      i_data_in_d => "00011010",
+                      i_sel => w_cycle_out(1 downto 0), -- gets the last two bits of the cycle from the FSM and uses it to select the source from the mux inside of the ALU  
+                      i_data_in_a => w_A_out, -- a in
+                      i_data_in_b => w_B_out, -- b in
+                      i_data_in_c => w_ALU_out, -- result of math
+                      i_data_in_d => "00011010", -- this state should be impossible and describes and error code of sarge
                       o_data_out => w_mux_out
                       );
            
@@ -266,11 +264,11 @@ begin
                 -- w_ones
          twoscomp_decimal_inst : twoscomp_decimal
              port map (
-                i_binary => w_mux_out,
-                o_negative => w_sign,
-                o_hundreds => w_hund,
-                o_tens => w_tens,
-                o_ones => w_ones
+                i_binary => w_mux_out, -- input to converter
+                o_negative => w_sign, -- output from converter to tdm
+                o_hundreds => w_hund, -- output from converter to tdm
+                o_tens => w_tens, -- output from converter to tdm
+                o_ones => w_ones -- output from converter to tdm
             );
                 
         
@@ -287,14 +285,14 @@ begin
          TDM4_inst : TDM4
             generic map ( k_WIDTH => 4)
             Port map (
-                    i_clk => w_clk_out,
-                    i_reset => w_btnU_in,
-                    i_D0 => w_ones,
-                    i_D1 => w_tens,
-                    i_D2 => w_hund,
-                    i_D3 => w_sign,
-                    o_data => w_seven_seg_val,
-                    o_sel => an
+                    i_clk => w_clk_out, -- from the master system clock
+                    i_reset => w_btnU_in, -- tied to master reset
+                    i_D0 => w_ones, -- tied to the ones display
+                    i_D1 => w_tens,-- tied to the tens display
+                    i_D2 => w_hund,-- tied to the hund display
+                    i_D3 => w_sign,-- tied to the sign display
+                    o_data => w_seven_seg_val, -- send the number for each tens place to the 7 seg to be decoded
+                    o_sel => an -- selects which pannel is on.
              );
                     
                     
