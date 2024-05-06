@@ -53,7 +53,7 @@ architecture top_basys3_arch of top_basys3 is
 	signal w_btnC_in : std_logic; -- wire for the advance command, connects to FSM
 	signal w_sw_2_0_in : std_logic_vector(2 downto 0); -- wire for opcode input, connects to ALU
 	signal w_sw_7_0_in : std_logic_vector(7 downto 0); -- wire for the numerical value input, connects to reg a, connects to reg b
-	signal w_cycle_out : std_logic_vector(1 downto 0); -- binary signal for the fsm state, selects which number is displayed in the mux, and outputs to leds for debugging, connects to both registers and decides which one receives an input in a current state within the FSM
+	signal w_cycle_out : std_logic_vector(3 downto 0); -- binary signal for the fsm state, selects which number is displayed in the mux, and outputs to leds for debugging, connects to both registers and decides which one receives an input in a current state within the FSM
 	signal w_A_out : std_logic_vector(7 downto 0); -- signal from the register A, connects to AUL
 	signal w_B_out : std_logic_vector(7 downto 0); -- signal from the register B, connects to ALU
 	signal w_ALU_out : std_logic_vector(7 downto 0); -- result of the alu
@@ -83,7 +83,7 @@ architecture top_basys3_arch of top_basys3 is
 	--component Register A
 	component reg is 
 	   Port ( val_in : in STD_LOGIC_VECTOR (7 downto 0);
-               cycle_in : in STD_LOGIC_VECTOR (1 downto 0);
+               cycle_in : in STD_LOGIC_VECTOR (3 downto 0);
                val_out : out STD_LOGIC_VECTOR (7 downto 0)
       );
       end component reg;
@@ -92,7 +92,7 @@ architecture top_basys3_arch of top_basys3 is
 	--component Register B
 	  component reg1 is 
            Port ( val_in : in STD_LOGIC_VECTOR (7 downto 0);
-                   cycle_in : in STD_LOGIC_VECTOR (1 downto 0);
+                   cycle_in : in STD_LOGIC_VECTOR (3 downto 0);
                    val_out : out STD_LOGIC_VECTOR (7 downto 0)
           );
           end component reg1;
@@ -104,7 +104,7 @@ architecture top_basys3_arch of top_basys3 is
            i_B : in std_logic_vector(7 downto 0); -- connection of b register to alu
            i_opcode : in std_logic_vector(2 downto 0); -- connection of opcode input to alu
            o_result : out std_logic_vector(7 downto 0); -- output of the desired calculation based on the opcode
-           o_flags : out std_logic_vector(2 downto 0) -- output of the flags
+           o_flags : out std_logic_vector(3 downto 0) -- output of the flags
        );
        end component ALU;
 	
@@ -180,12 +180,16 @@ architecture top_basys3_arch of top_basys3 is
      
   
 begin
+    led(15 downto 12) <= w_cycle_out;
     sw3 <= sw(2 downto 0);
   
     sw7 <= sw(7 downto 0);
+    
     led(12 downto 4) <= x"00"&'0';
     w_btnU_in <= btnU;
     w_btnC_in <= btnC;
+--    w_A_out <= sw(7 downto 0);
+--    w_B_out <= sw(7 downto 0);
     
 	-- PORT MAPS ----------------------------------------
         -- Register A 
@@ -196,7 +200,7 @@ begin
                 -- w_A_out
         Reg_inst : reg
            Port map(
-                   val_in =>  sw7, 
+                   val_in =>  sw(7 downto 0), 
                    cycle_in => w_cycle_out,
                    val_out => w_A_out
             );
@@ -210,7 +214,7 @@ begin
                  -- w_B_out
           Reg1_inst : reg1
                    Port map(
-                           val_in => sw7(7 downto 0),
+                           val_in => sw(7 downto 0),
                            cycle_in => w_cycle_out,
                            val_out => w_B_out
                     );
@@ -229,7 +233,7 @@ begin
                 i_B => w_B_out, -- connection of b register to alu
                 i_opcode => sw(2 downto 0),-- connection of opcode input to alu
                 o_result => w_ALU_out,  -- output of the desired calculation based on the opcode
-                o_flags => led(15 downto 13) -- output of the flags
+                o_flags => led(15 downto 12) -- output of the flags
             );
               
 
@@ -243,7 +247,7 @@ begin
               -- w_mux_to_converter   
             mux_4_to_1_inst : mux_4_to_1
                  Port map (
-                      i_sel => w_cycle_out(1 downto 0), -- current working directory
+                      i_sel => w_cycle_out(2 downto 1), -- current working directory
                       i_data_in_a => w_A_out,
                       i_data_in_b => w_B_out,
                       i_data_in_c => w_ALU_out,

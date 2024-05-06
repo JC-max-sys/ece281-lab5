@@ -42,7 +42,7 @@ entity ALU is
         i_B : in std_logic_vector(7 downto 0); -- connection of b register to alu
         i_opcode : in std_logic_vector(2 downto 0); -- connection of opcode input to alu
         o_result : out std_logic_vector(7 downto 0); -- output of the desired calculation based on the opcode
-        o_flags : out std_logic_vector(2 downto 0) -- output of the flags
+        o_flags : out std_logic_vector(3 downto 0) -- output of the flags
     );
 end ALU;
 
@@ -95,7 +95,7 @@ architecture behavioral of ALU is
 	component flag_to_led_converter is
 	   Port ( i_overflow : in STD_LOGIC;
                i_carry : in STD_LOGIC;
-               o_led : out STD_LOGIC_VECTOR (2 downto 0));
+               o_led : out STD_LOGIC_VECTOR (3 downto 0));
 	end component flag_to_led_converter;
 	
 	-- Signals
@@ -111,7 +111,7 @@ architecture behavioral of ALU is
 	signal w_opcode_selector_to_mux : std_logic_vector(1 downto 0);
 	signal w_overflow : std_logic; -- boolean value for overflow
 	signal w_carry : std_logic; -- boolean value for carry
-	signal w_flag_to_led : std_logic_vector(2 downto 0); -- led output code for flags
+	signal w_flag_to_led : std_logic_vector(3 downto 0); -- led output code for flags
 	
 	
 
