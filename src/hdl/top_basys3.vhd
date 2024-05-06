@@ -171,7 +171,7 @@ architecture top_basys3_arch of top_basys3 is
 	component controller_FSM is
 	    Port ( i_reset : in STD_LOGIC;
               i_advance : in STD_LOGIC;
-              o_cycle : out STD_LOGIC_VECTOR (1 downto 0);
+              o_cycle : out STD_LOGIC_VECTOR (3 downto 0);
               i_clk : in STD_LOGIC
         );
         end component controller_FSM;
