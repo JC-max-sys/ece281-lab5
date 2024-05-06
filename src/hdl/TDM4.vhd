@@ -96,10 +96,15 @@ begin
 			  i_D2 when f_sel = "10" else
 			  i_D3;
 			  
-	o_SEL  <=  "0111" when f_sel = "11" else
-			   "1011" when f_sel = "10" else
-			   "1101" when f_sel = "01" else
-			   "1110";
+--	o_SEL  <=  "0111" when f_sel = "11" else
+--			   "1011" when f_sel = "10" else
+--			   "1101" when f_sel = "01" else
+--			   "1110";
+    o_SEL  <=  "0111" when f_sel = "11" else
+                   "1011" when f_sel = "10" else
+                   "1101" when f_sel = "01" else
+                   "1110" when f_sel = "00" else
+                   "1111";
 		
 end behavioral;
 
