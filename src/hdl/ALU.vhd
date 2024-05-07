@@ -87,16 +87,17 @@ architecture behavioral of ALU is
               i_B : in STD_LOGIC_VECTOR (7 downto 0);
               i_add_sub : in STD_LOGIC;
               o_result : out STD_LOGIC_VECTOR (7 downto 0);
-              o_overflow : out STD_LOGIC;
+              o_zero : out std_logic;
+              o_negative : out STD_LOGIC;
               o_carry : out STD_LOGIC );
     end component adder_subtractor;
     
-	-- flag 2 led converter
-	component flag_to_led_converter is
-	   Port ( i_overflow : in STD_LOGIC;
-               i_carry : in STD_LOGIC;
-               o_led : out STD_LOGIC_VECTOR (3 downto 0));
-	end component flag_to_led_converter;
+--	-- flag 2 led converter -- removed following Major Seery's suggestions
+--	component flag_to_led_converter is
+--	   Port ( i_overflow : in STD_LOGIC;
+--               i_carry : in STD_LOGIC;
+--               o_led : out STD_LOGIC_VECTOR (3 downto 0));
+--	end component flag_to_led_converter;
 	
 	-- Signals
 	signal w_A : std_logic_vector (7 downto 0); -- input wire for a
@@ -109,7 +110,8 @@ architecture behavioral of ALU is
 	signal w_shift : std_logic; -- boolean value for shift of left right or add subtract
 	signal w_opcode_in : std_logic_vector(2 downto 0); -- opcode that selects desired calculation
 	signal w_opcode_selector_to_mux : std_logic_vector(1 downto 0);
-	signal w_overflow : std_logic; -- boolean value for overflow
+	signal w_negative : std_logic; -- boolean value for negative
+	signal w_zero : std_logic; -- boolean value for zero
 	signal w_carry : std_logic; -- boolean value for carry
 	signal w_flag_to_led : std_logic_vector(3 downto 0); -- led output code for flags
 	
@@ -122,7 +124,10 @@ begin
     w_B <= i_B;
     o_result <= w_result_final;
     w_opcode_in <= i_opcode;
-    o_flags <= w_flag_to_led;
+    o_flags(0) <= '0';
+    o_flags(1) <= w_carry;
+    o_flags(2) <= w_zero;
+    o_flags(3) <= w_negative;
     
     w_result_and <= (w_A and w_B);
     w_result_or <= (w_A or w_B);
@@ -141,7 +146,8 @@ begin
             i_add_sub => w_shift,
             o_result => w_result_add_subtract,
             o_carry => w_carry,
-            o_overflow => w_overflow
+            o_zero => w_zero,
+            o_negative => w_negative
         );
         
      right_left_shifter_inst : right_left_shifter
@@ -152,12 +158,12 @@ begin
             o_result => w_result_shifter
         );
         
-     flag_to_led_converter_inst : flag_to_led_converter
-        port map (
-            i_overflow => w_overflow,
-            i_carry => w_carry,
-            o_led => w_flag_to_led
-        );
+--     flag_to_led_converter_inst : flag_to_led_converter -- removed following Maj. Seery's suggestions
+--        port map (
+--            i_overflow => w_overflow,
+--            i_carry => w_carry,
+--            o_led => w_flag_to_led
+--        );
 	
 	 mux_4_to_1_inst : mux_4_to_1
 	   port map (
