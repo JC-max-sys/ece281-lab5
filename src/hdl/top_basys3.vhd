@@ -31,7 +31,6 @@ entity top_basys3 is
         clk : in std_logic;
         btnU : in std_logic;
         btnC : in std_logic;
---        sw3 : in std_logic_vector(2 downto 0);
         sw : in std_logic_vector(7 downto 0);
         led : out std_logic_vector(15 downto 0);
         seg : out std_logic_vector(6 downto 0);
@@ -183,9 +182,10 @@ begin
     led(3 downto 0) <= w_cycle_out;
     sw3 <= sw(2 downto 0);
     sw7 <= sw(7 downto 0);
-    led(15 downto 4) <= "000000000000";
+    led(11 downto 4) <= "00000000";
     w_btnU_in <= btnU;
     w_btnC_in <= btnC;
+    w_sw_2_0_in <= sw3;
 --    w_A_out <= sw(7 downto 0);
 --    w_B_out <= sw(7 downto 0);
     
@@ -249,7 +249,7 @@ begin
                       i_data_in_a => w_A_out, -- a in
                       i_data_in_b => w_B_out, -- b in
                       i_data_in_c => w_ALU_out, -- result of math
-                      i_data_in_d => "00011010", -- this state should be impossible and describes and error code of sarge
+                      i_data_in_d => w_ALU_out, -- this state should be impossible and describes and error code of sarge
                       o_data_out => w_mux_out
                       );
            
