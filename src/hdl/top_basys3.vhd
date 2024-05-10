@@ -58,7 +58,7 @@ architecture top_basys3_arch of top_basys3 is
 	signal w_ALU_out : std_logic_vector(7 downto 0); -- result of the alu
 	signal w_flags_out : std_logic_vector(2 downto 0); -- signal for the output flags, make sure to connect it to led 15-13
 	signal w_mux_out : std_logic_vector(7 downto 0); -- signal for the selected item to be displayed from the mux, goes to 2s compt converter
-	signal w_sign : std_logic_vector(3 downto 0); -- signal for the sign of the value, connects to TDM4
+	signal w_negative : std_logic_vector(3 downto 0); -- signal for the sign of the value, connects to TDM4
 	signal w_hund : std_logic_vector(3 downto 0); -- signal for the hundreds place, connects to TDM4
 	signal w_tens : std_logic_vector(3 downto 0); -- signal for the tens place, connects to TDM4
 	signal w_ones : std_logic_vector(3 downto 0); -- signal for the ones place, connects to TDM4
@@ -258,14 +258,14 @@ begin
             -- inputs
                 -- w_mux_to_converter
             -- outputs
-                -- w_sign
+                -- w_negative
                 -- w_hund
                 -- w_tens
                 -- w_ones
          twoscomp_decimal_inst : twoscomp_decimal
              port map (
                 i_binary => w_mux_out, -- input to converter
-                o_negative => w_sign, -- output from converter to tdm
+                o_negative => w_negative, -- output from converter to tdm
                 o_hundreds => w_hund, -- output from converter to tdm
                 o_tens => w_tens, -- output from converter to tdm
                 o_ones => w_ones -- output from converter to tdm
@@ -274,7 +274,7 @@ begin
         
         -- TDM4
             -- inputs
-                -- w_sign
+                -- w_negative
                 -- w_hund
                 -- w_tens
                 -- w_ones
@@ -290,7 +290,7 @@ begin
                     i_D0 => w_ones, -- tied to the ones display
                     i_D1 => w_tens,-- tied to the tens display
                     i_D2 => w_hund,-- tied to the hund display
-                    i_D3 => w_sign,-- tied to the sign display
+                    i_D3 => w_negative,-- tied to the sign display
                     o_data => w_seven_seg_val, -- send the number for each tens place to the 7 seg to be decoded
                     o_sel => an -- selects which pannel is on.
              );
