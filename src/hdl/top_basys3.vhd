@@ -124,7 +124,7 @@ architecture top_basys3_arch of top_basys3 is
 	component twoscomp_decimal is
 	 port (
              i_binary: in std_logic_vector(7 downto 0);
-             o_sign: out std_logic_vector(3 downto 0);
+             o_negative: out std_logic_vector(3 downto 0);
              o_hundreds: out std_logic_vector(3 downto 0);
              o_tens: out std_logic_vector(3 downto 0);
              o_ones: out std_logic_vector(3 downto 0)
@@ -265,7 +265,7 @@ begin
          twoscomp_decimal_inst : twoscomp_decimal
              port map (
                 i_binary => w_mux_out, -- input to converter
-                o_sign => w_sign, -- output from converter to tdm
+                o_negative => w_sign, -- output from converter to tdm
                 o_hundreds => w_hund, -- output from converter to tdm
                 o_tens => w_tens, -- output from converter to tdm
                 o_ones => w_ones -- output from converter to tdm
