@@ -41,7 +41,7 @@ begin
     begin
         w_binary <= "00000000";
         wait for 10 ns;
-        assert w_negative = '0' and w_hundreds = "0000" and w_tens = "0000" and w_ones = "0000" report "Bad convert 0" severity error;
+        assert w_negative = "00000000" and w_hundreds = "0000" and w_tens = "0000" and w_ones = "0000" report "Bad convert 0" severity error;
         
         w_binary <= "11110000";
         wait for 10 ns;
